@@ -1,10 +1,15 @@
-# goseaweed
-seaweed golang sdk
+package goseaweed
 
-install 
-`go get github.com/dollarkillerx/goseaweed`
+import (
+	"io/ioutil"
+	"log"
+	"testing"
+	"time"
+)
 
-``` 
+func TestSeaweed(t *testing.T) {
+	log.SetFlags(log.Llongfile | log.LstdFlags)
+
 	fs := NewSeaweedFs("http://192.168.88.11:8888", time.Second*10)
 	file, err := ioutil.ReadFile("./README/82274b7ec75f6f1fd86641f64dc82958.png")
 	if err != nil {
@@ -18,4 +23,4 @@ install
 		log.Fatalln(err)
 	}
 	ioutil.WriteFile("xxx.png",object,000666)
-```
+}
