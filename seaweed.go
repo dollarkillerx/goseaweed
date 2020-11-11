@@ -3,8 +3,8 @@ package goseaweed
 import (
 	"bytes"
 	"fmt"
+	"github.com/pkg/errors"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"time"
@@ -30,36 +30,30 @@ func (s *seaweedFS) PutObject(objectName string, content []byte) error {
 	writer := multipart.NewWriter(payload)
 	err := writer.WriteField("file", bytes.NewBuffer(content).String())
 	if err != nil {
-		log.Println(err)
-		return err
+		return errors.WithStack(err)
 	}
 	err = writer.Close()
 	if err != nil {
-		log.Println(err)
-		return err
+		return errors.WithStack(err)
 	}
 
 	client := &http.Client{Timeout: s.timeout}
 	req, err := http.NewRequest(method, url, payload)
 
 	if err != nil {
-		log.Println(err)
-		return err
+		return errors.WithStack(err)
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	res, err := client.Do(req)
 	if err != nil {
-		log.Println(err)
-		return err
+		return errors.WithStack(err)
 	}
 	if res.StatusCode != http.StatusCreated {
 		defer res.Body.Close()
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			log.Println(err)
-			return err
+			return errors.WithStack(err)
 		}
-		log.Println(res.StatusCode, string(body))
 		return fmt.Errorf("create failed, response:%s", string(body))
 	}
 	return nil
@@ -68,7 +62,7 @@ func (s *seaweedFS) PutObject(objectName string, content []byte) error {
 func (s *seaweedFS) GetObject(objectName string) ([]byte, error) {
 	body, err := http.Get(fmt.Sprintf("%s/%s", s.serverURL, objectName))
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	defer body.Body.Close()
 	return ioutil.ReadAll(body.Body)
@@ -81,23 +75,19 @@ func (s *seaweedFS) RemoveObject(objectName string) error {
 	client := &http.Client{Timeout: s.timeout}
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
-		log.Println(err)
-		return err
+		return errors.WithStack(err)
 	}
 
 	res, err := client.Do(req)
 	if err != nil {
-		log.Println(err)
-		return err
+		return errors.WithStack(err)
 	}
 	if res.StatusCode != http.StatusNoContent {
 		defer res.Body.Close()
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			log.Println(err)
-			return err
+			return errors.WithStack(err)
 		}
-		log.Println(res.StatusCode, string(body))
 		return fmt.Errorf("delete failed, response:%s", string(body))
 	}
 	return nil
